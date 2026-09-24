@@ -996,16 +996,21 @@ function bindProductData() {
   };
   $$("[data-bind]").forEach(el => { const k = el.dataset.bind; if (map[k] !== undefined) el.textContent = map[k]; });
   $$('a[href^="tel:"]').forEach(a => a.setAttribute("href", "tel:" + SITE.phoneIntl));
-  $("#heroStars").textContent = starsText(avg);
+  const hs = $("#heroStars");
+  if (hs) hs.textContent = starsText(avg);
 }
 
 function renderLists() {
-  if (PRODUCT.benefits.length) $("#benefitsList").innerHTML = PRODUCT.benefits.map(b => `<li>${esc(b)}</li>`).join("");
-  if (PRODUCT.features.length) $("#featuresGrid").innerHTML = PRODUCT.features.map(f => `
+  const bl = $("#benefitsList");
+  if (bl && PRODUCT.benefits.length) bl.innerHTML = PRODUCT.benefits.map(b => `<li>${esc(b)}</li>`).join("");
+  const fg = $("#featuresGrid");
+  if (fg && PRODUCT.features.length) fg.innerHTML = PRODUCT.features.map(f => `
     <div class="col"><div class="feature-card"><i class="bi ${esc(f.icon)}" aria-hidden="true"></i><h3>${esc(f.title)}</h3><p>${esc(f.text)}</p></div></div>`).join("");
-  if (PRODUCT.steps.length) $("#stepsList").innerHTML = PRODUCT.steps.map((s, i) => `
+  const sl = $("#stepsList");
+  if (sl && PRODUCT.steps.length) sl.innerHTML = PRODUCT.steps.map((s, i) => `
     <div class="col-md-4"><div class="step"><span class="step-num">${String(i + 1).padStart(2, "0")}</span><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div></div>`).join("");
-  if (PRODUCT.faq.length) $("#faqAccordion").innerHTML = PRODUCT.faq.map((f, i) => `
+  const faq = $("#faqAccordion");
+  if (faq && PRODUCT.faq.length) faq.innerHTML = PRODUCT.faq.map((f, i) => `
     <div class="accordion-item">
       <h3 class="accordion-header"><button class="accordion-button ${i ? "collapsed" : ""}" type="button" data-bs-toggle="collapse" data-bs-target="#faq${i}" aria-expanded="${i ? "false" : "true"}" aria-controls="faq${i}">${i + 1}. ${esc(f.q)}</button></h3>
       <div id="faq${i}" class="accordion-collapse collapse ${i ? "" : "show"}" data-bs-parent="#faqAccordion"><div class="accordion-body">${esc(f.a)}</div></div>
@@ -1013,11 +1018,16 @@ function renderLists() {
 }
 
 function renderReviews() {
+  const list = $("#reviewsList");
+  if (!list) return;
   const avg = averageRating();
-  $("#reviewAvg").textContent = avg ? avg.toFixed(1) : "–";
-  $("#reviewStars").textContent = starsText(avg);
-  $("#reviewBasis").textContent = SITE.demoMode ? "Sample reviews shown for layout preview" : "Based on verified customer feedback";
-  $("#reviewsList").innerHTML = REVIEWS.map(r => `
+  const avgEl = $("#reviewAvg");
+  if (avgEl) avgEl.textContent = avg ? avg.toFixed(1) : "–";
+  const starsEl = $("#reviewStars");
+  if (starsEl) starsEl.textContent = starsText(avg);
+  const basisEl = $("#reviewBasis");
+  if (basisEl) basisEl.textContent = SITE.demoMode ? "Sample reviews shown for layout preview" : "Based on verified customer feedback";
+  list.innerHTML = REVIEWS.map(r => `
     <div class="col"><article class="review-card">
       <div class="d-flex justify-content-between align-items-center">
         <span class="stars" aria-label="${r.rating} out of 5 stars">${starsText(r.rating)}</span>
@@ -1030,6 +1040,7 @@ function renderReviews() {
 
 function renderCustomerPhotos() {
   const section = $("#customerPhotos"), grid = $("#customerPhotosGrid");
+  if (!section || !grid) return;
   if (CUSTOMER_PHOTOS.length) {
     grid.innerHTML = CUSTOMER_PHOTOS.map(p => `<div class="col"><img class="customer-photo" loading="lazy" src="${p.src}" alt="${esc(p.alt || "Customer photo")}"></div>`).join("");
   } else if (SITE.demoMode) {
@@ -1044,6 +1055,7 @@ function applyDemoMode() { if (!SITE.demoMode) $$(".demo-only").forEach(el => el
 /* Gallery */
 function renderGallery() {
   const thumbs = $("#galleryThumbs");
+  if (!thumbs) return;
   thumbs.innerHTML = PRODUCT.images.map((img, i) => `
     <button type="button" class="gallery-thumb ${i === 0 ? "active" : ""}" role="listitem" data-index="${i}" aria-label="Show image ${i + 1}: ${esc(img.alt)}" aria-pressed="${i === 0}">
       <img src="${img.thumb}" alt="" width="76" height="76" ${i > 1 ? 'loading="lazy"' : ""}>
@@ -1053,11 +1065,13 @@ function renderGallery() {
     if (b) setGalleryImage(+b.dataset.index);
   });
   setGalleryImage(0);
-  $("#galleryMainBtn").addEventListener("click", () => openLightbox(galleryIndex));
+  const mainBtn = $("#galleryMainBtn");
+  if (mainBtn) mainBtn.addEventListener("click", () => openLightbox(galleryIndex));
 }
 function setGalleryImage(i) {
   galleryIndex = (i + PRODUCT.images.length) % PRODUCT.images.length;
   const img = PRODUCT.images[galleryIndex], main = $("#galleryMainImg");
+  if (!main) return;
   main.src = img.src; main.alt = img.alt;
   $$(".gallery-thumb").forEach((t, n) => { t.classList.toggle("active", n === galleryIndex); t.setAttribute("aria-pressed", n === galleryIndex); });
 }
@@ -1307,8 +1321,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderGallery();
   renderReviews();
   renderCustomerPhotos();
-  $("#summaryImg").src = PRODUCT.images[0].thumb;
-  $("#summaryImg").alt = PRODUCT.name;
+  const sumImg = $("#summaryImg");
+  if (sumImg) { sumImg.src = PRODUCT.images[0].thumb; sumImg.alt = PRODUCT.name; }
   setHeroQty(1);
   initActions();
   initCheckout();
