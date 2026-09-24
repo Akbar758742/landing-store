@@ -1286,9 +1286,21 @@ function initCheckout() {
     btn.disabled = true;
     const oldHtml = btn.innerHTML;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Placing order…';
+    let placed = false;
     try {
       const res = await submitOrder(order);
       if (!res.ok) throw new Error("Order failed");
+      placed = true;
+    } catch (err) {
+      console.error(err);
+      alert("Sorry, we could not place your order. Please try again or call " + SITE.phone + ".");
+    } finally {
+      btn.disabled = false; btn.innerHTML = oldHtml;
+    }
+    if (!placed) { renderCheckoutSummary(); return; }
+
+    // Order is placed — errors past this point must not tell the customer it failed
+    try {
       const orders = store.get("sp_orders", []); orders.push(order); store.set("sp_orders", orders.slice(-20));
       store.set("sp_last_order", order);
       store.set("sp_customer", customer);
@@ -1296,12 +1308,15 @@ function initCheckout() {
       Cart.clear();
       showSuccess(order);
     } catch (err) {
-      alert("Sorry, we could not place your order. Please try again or call " + SITE.phone + ".");
+      console.error(err);
     } finally {
-      btn.disabled = false; btn.innerHTML = oldHtml; renderCheckoutSummary();
+      renderCheckoutSummary();
     }
   });
 }
+
+// history.replaceState throws a SecurityError on file:// pages in Chrome (opaque origin)
+function setUrl(url) { try { history.replaceState(null, "", url); } catch (e) {} }
 
 function showSuccess(order) {
   $("#successOrderId").textContent = "#" + order.id;
@@ -1312,7 +1327,7 @@ function showSuccess(order) {
     <div class="text-muted-2 mt-2">Deliver to: ${esc(order.customer.fullName)}, ${esc(order.customer.phone)}<br>${esc(order.customer.address)}, ${esc(order.customer.area)}, ${esc(order.customer.district)}</div>`;
   $("#storefront").classList.add("d-none");
   $("#orderSuccess").classList.remove("d-none");
-  history.replaceState(null, "", location.pathname + location.search + "#order-success");
+  setUrl(location.pathname + location.search + "#order-success");
   window.scrollTo(0, 0);
   $("#orderSuccess").focus({ preventScroll: true });
   if (window.__updateBuyBar) window.__updateBuyBar();
@@ -1320,7 +1335,7 @@ function showSuccess(order) {
 function showStorefront() {
   $("#orderSuccess").classList.add("d-none");
   $("#storefront").classList.remove("d-none");
-  history.replaceState(null, "", location.pathname + location.search);
+  setUrl(location.pathname + location.search);
   window.scrollTo(0, 0);
   if (window.__updateBuyBar) window.__updateBuyBar();
 }
